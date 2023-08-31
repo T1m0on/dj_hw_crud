@@ -32,14 +32,10 @@ class StockSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         positions = validated_data.pop('positions')
-        pos = list(instance.positions.all())
-        instance.address = validated_data.get('address', instance.address)
-        instance.save()
+        stock = super().update(instance, validated_data)
 
         for position in positions:
-            p = pos.pop(0)
-            p.product = position.get('product', p.product)
-            p.quantity = position.get('quantity', p.quantity)
-            p.price = position.get('price', p.price)
-            p.save()
-        return instance
+            StockProduct.objects.update_or_create(stock=stock, product=position['product'],
+                                                  defaults={'price': position['price'],
+                                                  'quantity': position['quantity']})
+        return stock
